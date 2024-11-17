@@ -5,8 +5,8 @@ from telethon.tl.functions.channels import GetParticipantsRequest, ApproveChanne
 from telethon.tl.types import ChannelParticipantsRequests
 
 # Your API ID and Hash, replace with your values
-api_id = 'YOUR_API_ID'
-api_hash = 'YOUR_API_HASH'
+api_id = '22012880'
+api_hash = '5b0e07f5a96d48b704eb9850d274fe1d'
 
 # Initialize the client
 client = TelegramClient('userbot_session', api_id, api_hash)
@@ -14,7 +14,7 @@ client = TelegramClient('userbot_session', api_id, api_hash)
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     """Responds to the /start command."""
-    await event.reply("Hello! I am here to help approve all pending join requests in this channel. Use /approveall to approve all requests.")
+    await event.reply("Hello! I can approve all pending join requests in your channel. Add me to channel with admin rights and Use /approveall to approve all requests.")
 
 @client.on(events.NewMessage(pattern='/approveall'))
 async def approve_all_requests(event):
