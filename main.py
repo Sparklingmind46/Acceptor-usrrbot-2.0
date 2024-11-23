@@ -4,8 +4,7 @@ from telethon.tl.types import ChannelAdminLogEventsFilter
 
 # Replace these with your own values
 api_id = '22012880'
-api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg
-'
+api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg'
 phone = '+917367017930'  # e.g., '+123456789'
 
 client = TelegramClient('session_name', api_id, api_hash)
