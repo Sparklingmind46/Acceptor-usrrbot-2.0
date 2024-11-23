@@ -1,67 +1,41 @@
-import asyncio
 from telethon import TelegramClient, events
-from telethon.errors import FloodWaitError
-from telethon.tl.functions.channels import GetParticipantsRequest, ApproveChannelJoinRequest
-from telethon.tl.types import ChannelParticipantsRequests
+from telethon.tl.functions.channels import GetAdminLogRequest
+from telethon.tl.types import ChannelAdminLogEventsFilter
 
-# Your API ID and Hash, replace with your values
+# Replace these with your own values
 api_id = '22012880'
-api_hash = '5b0e07f5a96d48b704eb9850d274fe1d'
+api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg
+'
+phone = '+917367017930'  # e.g., '+123456789'
 
-# Initialize the client
-client = TelegramClient('userbot_session', api_id, api_hash)
+client = TelegramClient('session_name', api_id, api_hash)
 
-@client.on(events.NewMessage(pattern='/start'))
-async def start(event):
-    """Responds to the /start command."""
-    await event.reply("Hello! I can approve all pending join requests in your channel. Add me to channel with admin rights and Use /approveall to approve all requests.")
+async def accept_all_join_requests(channel_id):
+    try:
+        async for event in client.iter_admin_log(
+            entity=channel_id,
+            filter=ChannelAdminLogEventsFilter(participants=True),
+        ):
+            if event.join_request:
+                try:
+                    await client.edit_admin(channel_id, event.user_id, invite=True)
+                    print(f"Accepted join request from {event.user_id}")
+                except Exception as e:
+                    print(f"Failed to accept join request from {event.user_id}: {e}")
+        print("All join requests accepted.")
+    except Exception as e:
+        print(f"Error: {e}")
 
-@client.on(events.NewMessage(pattern='/approveall'))
-async def approve_all_requests(event):
-    # Check if the command is issued in a channel
+@client.on(events.NewMessage(pattern='/accept_all'))
+async def handler(event):
+    # Check if the command is sent from a channel
     if event.is_channel and event.is_group:
-        channel_id = event.chat_id  # Get the channel ID dynamically
-        try:
-            # Fetch pending join requests for the detected channel
-            offset = 0
-            limit = 100
-            requests_approved = 0
-
-            # Process requests in batches until there are no more
-            while True:
-                requests = await client(GetParticipantsRequest(
-                    channel=channel_id,
-                    filter=ChannelParticipantsRequests(),
-                    offset=offset,
-                    limit=limit,
-                    hash=0
-                ))
-
-                # If there are no pending requests, exit the loop
-                if not requests.users:
-                    break
-
-                # Approve each pending join request
-                for user in requests.users:
-                    try:
-                        await client(ApproveChannelJoinRequest(channel=channel_id, user_id=user.id))
-                        print(f'Approved join request from {user.username or user.id}')
-                        requests_approved += 1
-                        await asyncio.sleep(1)  # Short delay to reduce the risk of hitting the flood limit
-                    except FloodWaitError as e:
-                        print(f"Flood wait error encountered. Waiting for {e.seconds} seconds.")
-                        await asyncio.sleep(e.seconds)  # Wait for the specified time before continuing
-
-                # Update offset for the next batch of requests
-                offset += limit
-
-            await event.reply(f"All pending join requests ({requests_approved}) have been approved for this channel.")
-        except Exception as e:
-            await event.reply(f"Error: {str(e)}")
+        channel_id = event.chat_id
+        await accept_all_join_requests(channel_id)
+        await event.reply("Accepted all pending join requests in this channel.")
     else:
-        await event.reply("Please use the /approveall command in a channel or group.")
+        await event.reply("This command can only be used in a channel where you are an admin.")
 
-# Start the client
 with client:
-    print("Userbot is running and listening for commands...")
+    print("Userbot is running...")
     client.run_until_disconnected()
