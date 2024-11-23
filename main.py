@@ -1,5 +1,6 @@
 import os
-from pyrogram import Client, filters
+from pyrogram import Client, filters, errors
+import time 
 from pyrogram.types import Message
 
 # Replace with your actual values
@@ -34,5 +35,27 @@ async def accept_all(client, message: Message):
     else:
         await message.reply("This command can only be used in a channel where you are an admin.")
 
-print("Userbot is running...")
-app.run()
+async def start_bot():
+    try:
+        # Attempt to start the userbot
+        await app.start()
+        print("Userbot is running...")
+
+        # Add your event handlers and bot logic here
+
+    except errors.BadMsgNotification as e:
+        print(f"Error: {e}. The client time may be out of sync.")
+        print("Retrying after a short delay...")
+
+        # Retry logic, wait for a while before retrying
+        time.sleep(5)
+        await start_bot()
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        await app.stop()
+
+if __name__ == "__main__":
+    app.run(start_bot())
+
+
