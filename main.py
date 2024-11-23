@@ -1,51 +1,38 @@
-from telethon import TelegramClient, events
-from telethon.tl.functions.channels import GetAdminLogRequest
-from telethon.tl.types import ChannelAdminLogEventsFilter
+import os
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
-# Replace these with your own values
-api_id = '22012880'
-api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg'
-phone = '+917367017930'  # e.g., '+123456789'
+# Replace with your actual values
+api_id = '22012880'  # Replace with your API ID
+api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg'  # Replace with your API Hash
+string_session = os.getenv("STRING_SESSION")  # Assuming you store the string session in an environment variable
 
-client = TelegramClient('session_name', api_id, api_hash)
+# Initialize the client with the string session
+app = Client("my_account", api_id=api_id, api_hash=api_hash, session_string=string_session)
 
 async def accept_all_join_requests(channel_id):
     try:
-        async for event in client.iter_admin_log(
-            entity=channel_id,
-            filter=ChannelAdminLogEventsFilter(participants=True),
-        ):
-            if event.join_request:
-                try:
-                    await client.edit_admin(channel_id, event.user_id, invite=True)
-                    print(f"Accepted join request from {event.user_id}")
-                except Exception as e:
-                    print(f"Failed to accept join request from {event.user_id}: {e}")
+        # Fetching the admin logs for join requests
+        async for event in app.get_chat_administrators(channel_id):
+            if event.user_id in channel_id:
+                await app.promote_chat_member(channel_id, event.user_id, can_invite_users=True)
+                print(f"Accepted join request from {event.user_id}")
         print("All join requests accepted.")
     except Exception as e:
         print(f"Error: {e}")
 
-@client.on(events.NewMessage(pattern='/ping'))
-async def ping(event):
-    await event.reply("Bot is alive!")
-    
-@client.on(events.NewMessage(pattern='/accept_all'))
-async def handler(event):
-    # Check if the command is sent from a channel
-    if event.is_channel and event.is_group:
-        channel_id = event.chat_id
+@app.on_message(filters.command('ping'))
+async def ping(client, message: Message):
+    await message.reply("Bot is alive!")
+
+@app.on_message(filters.command('accept_all'))
+async def accept_all(client, message: Message):
+    if message.chat.type in ['group', 'supergroup', 'channel']:
+        channel_id = message.chat.id
         await accept_all_join_requests(channel_id)
-        await event.reply("Accepted all pending join requests in this channel.")
+        await message.reply("Accepted all pending join requests in this channel.")
     else:
-        await event.reply("This command can only be used in a channel where you are an admin.")
+        await message.reply("This command can only be used in a channel where you are an admin.")
 
-with client:
-    print("Userbot is running...")
-    client.run_until_disconnected()
-
-print("Bot is starting...")
-
-@client.on(events.NewMessage(pattern='/accept_all'))
-async def handler(event):
-    print("Received /accept_all command")
-    ...
+print("Userbot is running...")
+app.run()
