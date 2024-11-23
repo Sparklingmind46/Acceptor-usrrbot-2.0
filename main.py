@@ -25,6 +25,10 @@ async def accept_all_join_requests(channel_id):
     except Exception as e:
         print(f"Error: {e}")
 
+@client.on(events.NewMessage(pattern='/ping'))
+async def ping(event):
+    await event.reply("Bot is alive!")
+    
 @client.on(events.NewMessage(pattern='/accept_all'))
 async def handler(event):
     # Check if the command is sent from a channel
@@ -38,3 +42,10 @@ async def handler(event):
 with client:
     print("Userbot is running...")
     client.run_until_disconnected()
+
+print("Bot is starting...")
+
+@client.on(events.NewMessage(pattern='/accept_all'))
+async def handler(event):
+    print("Received /accept_all command")
+    ...
