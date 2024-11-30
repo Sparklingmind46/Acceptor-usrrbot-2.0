@@ -1,7 +1,6 @@
 pyrogram==2.0.50
 tgcrypto==1.2.3
 dnspython==2.3.0
-motor==3.2.0
+motor==5.0.0  # Use the latest compatible version of motor
 pymongo>=4.4,<5
 flask
-
