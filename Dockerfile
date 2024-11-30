@@ -16,4 +16,4 @@ COPY bot.py .
 COPY health_check.py .
 
 # Run both the bot and HTTP server
-CMD python3 -u health_check.py & python3 main.py
+CMD python3 -u health_check.py & python3 bot.py
