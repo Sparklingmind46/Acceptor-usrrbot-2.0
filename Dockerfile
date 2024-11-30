@@ -1,19 +1,19 @@
-# Add at the top of the Dockerfile
+# Use the official Python base image
 FROM python:3.9-slim
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Copy the application files to the container
+COPY . /app
 
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 # Install a simple HTTP server
 RUN pip install flask
 
-# Copy the bot code
-COPY bot.py .
+# Expose the port your app runs on
+EXPOSE 8000
 
-# Add a dummy health check endpoint
-COPY health_check.py .
-
-# Run both the bot and HTTP server
+# Start the application
 CMD python3 -u health_check.py & python3 bot.py
