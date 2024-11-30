@@ -1,5 +1,5 @@
 ## 𝗔𝘂𝘁𝗼-𝗔ccept-𝗕𝗼𝘁
-
+https://github.com/Snowball-01/Auto-Accept-Telegram-Bot
 <p align="center">
 <a href="https://youtu.be/dAXspAB-xQU"><img src="https://media.tenor.com/lTg9wqDq3vwAAAAd/snowball.gif" /></a>
 </p>
