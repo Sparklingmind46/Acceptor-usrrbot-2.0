@@ -10,7 +10,7 @@ RUN pip install -r requirements.txt
 RUN pip install flask
 
 # Copy the bot code
-COPY main.py .
+COPY bot.py .
 
 # Add a dummy health check endpoint
 COPY health_check.py .
