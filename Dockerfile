@@ -9,11 +9,9 @@ COPY . /app
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-# Install a simple HTTP server
-RUN pip install flask
 
 # Expose the port your app runs on
 EXPOSE 8000
 
 # Start the application
-CMD python3 -u health_check.py & python3 bot.py
+CMD ["python", "bot.py"]
