@@ -1,61 +1,74 @@
-import os
-from pyrogram import Client, filters, errors
-import time 
-from pyrogram.types import Message
+from telebot import TeleBot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+import requests
 
-# Replace with your actual values
-api_id = '22012880'  # Replace with your API ID
-api_hash = '8034191591:AAFi9GqD6TpgS-d5DvX22Vh2DGgXB4SUZfg'  # Replace with your API Hash
-string_session = os.getenv("STRING_SESSION")  # Assuming you store the string session in an environment variable
+# Initialize your bot with the token
+bot = TeleBot("7207023522:AAHhYRF4EKT8ZcaX2IdmUmy2X7kzZ5D8OUc")
 
-# Initialize the client with the string session
-app = Client("my_account", api_id=api_id, api_hash=api_hash, session_string=string_session)
-
-async def accept_all_join_requests(channel_id):
+# Function to approve all pending chat join requests
+def approve_all_pending_requests(chat_id):
     try:
-        # Fetching the admin logs for join requests
-        async for event in app.get_chat_administrators(channel_id):
-            if event.user_id in channel_id:
-                await app.promote_chat_member(channel_id, event.user_id, can_invite_users=True)
-                print(f"Accepted join request from {event.user_id}")
-        print("All join requests accepted.")
-    except Exception as e:
-        print(f"Error: {e}")
+        # Fetch all pending join requests
+        response = requests.get(
+            f"https://api.telegram.org/bot{bot.token}/getChatJoinRequests",
+            params={"chat_id": chat_id},
+            timeout=10
+        )
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            data = response.json()
+            
+            if data.get("ok") and data.get("result"):
+                for request in data["result"]:
+                    user_id = request["user"]["id"]
+                    try:
+                        # Approve the request
+                        approve_response = requests.post(
+                            f"https://api.telegram.org/bot{bot.token}/approveChatJoinRequest",
+                            json={"chat_id": chat_id, "user_id": user_id},
+                            timeout=10
+                        )
+                        
+                        if approve_response.status_code == 200:
+                            # Create and send a welcome photo to the user
+                            markup = InlineKeyboardMarkup()
+                            markup.add(
+                                InlineKeyboardButton(text="Tᴇᴀᴍ sᴀᴛ 🤍✨", url="https://t.me/Team_SAT_25")
+                            )
+                            
+                            bot.send_photo(
+                                chat_id=user_id,
+                                photo='https://graph.org/file/4b30ed0d57465b79c1033.jpg',
+                                caption='''Your Channel Joining Request Accepted\n\nThanks For Joining Our Channel ❤️''',
+                                reply_markup=markup,
+                                parse_mode='HTML'
+                            )
+                        else:
+                            print(f"Failed to approve user {user_id}: {approve_response.json().get('description', 'Unknown error')}")
+                    
+                    except requests.exceptions.RequestException as e:
+                        print(f"Error approving user {user_id}: {e}")
+            else:
+                print("No pending join requests found or insufficient permissions.")
+        else:
+            print(f"Failed to fetch join requests: {response.json().get('description', 'Unknown error')}")
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching join requests: {e}")
 
-@app.on_message(filters.command('ping'))
-async def ping(client, message: Message):
-    await message.reply("Bot is alive!")
-
-@app.on_message(filters.command('accept_all'))
-async def accept_all(client, message: Message):
-    if message.chat.type in ['group', 'supergroup', 'channel']:
-        channel_id = message.chat.id
-        await accept_all_join_requests(channel_id)
-        await message.reply("Accepted all pending join requests in this channel.")
-    else:
-        await message.reply("This command can only be used in a channel where you are an admin.")
-
-async def start_bot():
+# Command to handle approving all join requests (triggered manually)
+@bot.message_handler(commands=['approve_all'])
+def handle_approve_all(message):
     try:
-        # Attempt to start the userbot
-        await app.start()
-        print("Userbot is running...")
-
-        # Add your event handlers and bot logic here
-
-    except errors.BadMsgNotification as e:
-        print(f"Error: {e}. The client time may be out of sync.")
-        print("Retrying after a short delay...")
-
-        # Retry logic, wait for a while before retrying
-        time.sleep(5)
-        await start_bot()
-
+        chat_id = message.chat.id  # Replace this with your target chat ID if required
+        approve_all_pending_requests(chat_id)
+        bot.reply_to(message, "Approved all pending join requests!")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        await app.stop()
+        bot.reply_to(message, f"An error occurred: {e}")
 
-if __name__ == "__main__":
-    app.run(start_bot())
-
-
+# Start the bot
+try:
+    bot.polling()
+except Exception as e:
+    print(f"Bot polling failed: {e}")
